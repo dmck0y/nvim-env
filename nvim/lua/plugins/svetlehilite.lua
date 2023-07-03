@@ -1,0 +1,5 @@
+return {
+  {
+    "evanleck/vim-svelte",
+  },
+}
