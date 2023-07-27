@@ -1,0 +1,8 @@
+version: '3'
+services:
+  desktop:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ".:/home/mckoy/data"
