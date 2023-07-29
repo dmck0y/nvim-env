@@ -3,9 +3,7 @@ FROM debian:buster-slim AS build
 
 # Install the dependencies in one go
 RUN apt update && \
-    apt install -y git curl file cmake gettext golang tmux && \
-    rm -rf /var/lib/apt/lists/* && \
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    apt install -y git curl file cmake gettext golang tmux
 
 FROM debian:buster-slim
 COPY --from=build . .
@@ -28,22 +26,12 @@ RUN git clone https://github.com/neovim/neovim && \
 RUN git clone -b dm_config --single-branch https://github.com/dmck0y/kickstart.nvim.git ~/.config/nvim && \
     rm -rf ~/.config/nvim/.git
 
-# Opam setup
-#RUN opam init -y --disable-sandboxing --bare && \
-#    eval $(opam env) && \
-#   opam switch create 4.10.0 && \
-#   opam update && \
-#   opam install -y dune merlin ocaml-lsp-server odoc ocamlformat utop dune-release && \
-
 SHELL [ "/bin/bash", "-l", "-c" ]
 RUN curl --silent -o- https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
-
-# Set Rust environment variables
-ENV PATH="/home/mckoy/.cargo/bin:${PATH}"
+#RUN nvm install && nvm use
 
 # Setup path for nvim command
 ENV PATH="${PATH}:/home/mckoy/bin"
-RUN /bin/bash -c "source ~/.profile"
 
 CMD ["tail", "-f", "/dev/null"]
 
