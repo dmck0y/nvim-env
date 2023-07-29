@@ -5,4 +5,4 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ".:/home/mckoy/data"
+      - "./projects/:/home/mckoy/data"

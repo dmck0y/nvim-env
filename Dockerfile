@@ -1,12 +1,8 @@
 # Builder stage
-FROM debian:buster-slim AS build
-
+FROM debian:buster-slim AS neovim
 # Install the dependencies in one go
 RUN apt update && \
-    apt install -y git curl file cmake gettext golang tmux
-
-FROM debian:buster-slim
-COPY --from=build . .
+    apt install -y git curl file cmake gettext unzip tmux
 
 RUN useradd -u 8877 -m mckoy && \
     chown -R mckoy:mckoy /home/mckoy
@@ -14,7 +10,12 @@ RUN useradd -u 8877 -m mckoy && \
 USER mckoy
 
 WORKDIR /home/mckoy
-COPY . .
+
+SHELL ["/bin/bash", "-lc"]
+
+RUN git clone https://github.com/asdf-vm/asdf.git $HOME/.asdf --branch v0.12.0
+RUN echo ". $HOME/.asdf/asdf.sh" >> $HOME/.bashrc
+RUN echo ". $HOME/.asdf/completions/asdf.bash" >> ~/.bashrc
 
 # Clone and build neovim
 RUN git clone https://github.com/neovim/neovim && \
@@ -23,12 +24,28 @@ RUN git clone https://github.com/neovim/neovim && \
     make install
 
 # Clone config
-RUN git clone -b dm_config --single-branch https://github.com/dmck0y/kickstart.nvim.git ~/.config/nvim && \
+RUN git clone https://github.com/LazyVim/starter ~/.config/nvim && \
     rm -rf ~/.config/nvim/.git
 
-SHELL [ "/bin/bash", "-l", "-c" ]
-RUN curl --silent -o- https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
-#RUN nvm install && nvm use
+RUN chown -R mckoy:mckoy /home/mckoy
+USER mckoy
+
+WORKDIR /home/mckoy
+
+RUN /bin/bash -lc "source ~/.asdf/asdf.sh && \
+    asdf plugin add nodejs && \
+    asdf plugin add golang https://github.com/asdf-community/asdf-golang.git && \
+    asdf plugin add rust https://github.com/code-lever/asdf-rust.git"
+
+RUN /bin/bash -lc "source ~/.asdf/asdf.sh && \
+    asdf install nodejs 18.17.0 && \
+    asdf install golang 1.18.2 && \
+    asdf install rust latest"
+
+RUN /bin/bash -lc "source ~/.asdf/asdf.sh && \
+    asdf global nodejs 18.17.0 && \
+    asdf global golang 1.18.2 && \
+    asdf global rust latest"
 
 # Setup path for nvim command
 ENV PATH="${PATH}:/home/mckoy/bin"
